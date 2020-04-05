@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Mattermost server template with YAML - ECS Service Launch Depends on vpc-cfn.yml, sg-cfn.yml, ng-cfn.yml, alb-cfn.yml, tg-cfn.yml, ecs-*.yml
+
+Parameters:
+  VPCName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: debugroom-technical-academy-vpc
+
+Resources:
+  MattermostService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Fn::ImportValue: !Sub ${VPCName}-PublicEcsCluster
+      DesiredCount: 1
+      HealthCheckGracePeriodSeconds: 60
+      TaskDefinition:
+        Fn::ImportValue: !Sub ${VPCName}-MattermostEcsTaskDefinition
+      LaunchType: EC2
+      LoadBalancers:
+        - ContainerName: "debugroom-technical-academy-mattermost-server"
+          ContainerPort: 8000
+          TargetGroupArn:
+            Fn::ImportValue: !Sub ${VPCName}-Mattermost-TargetGroup

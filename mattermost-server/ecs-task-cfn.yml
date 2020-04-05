@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Mattermost ECS Task template with YAML - ECS Task Definition depends on vpc-cfn.yml, sg-cfn.yml, ecs-cluster-cfn.yml
+
+Parameters:
+  VPCName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: debugroom-technical-academy-vpc
+
+Mappings:
+  MattermostTaskDefinitionMap:
+    Task:
+      "Memory" : 2048
+      "Cpu" : 512
+      "ContainerName" : "debugroom-technical-academy-mattermost-server"
+      "ContainerImage" : "debugroom/mattermost-server:5.21.0"
+      "ContainerPort" : 8000
+      "HostPort" : 0
+      "ContainerMemory" : 1024
+      "Profile" : "dev"
+
+Resources:
+  MattermostECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+
+  MattermostECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: mattermost-server
+      RequiresCompatibilities:
+        - EC2
+      Memory: !FindInMap [MattermostTaskDefinitionMap, Task, Memory]
+      Cpu: !FindInMap [MattermostTaskDefinitionMap, Task, Cpu]
+      NetworkMode: bridge
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt MattermostECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: !FindInMap [MattermostTaskDefinitionMap, Task, ContainerName]
+          Image: !FindInMap [MattermostTaskDefinitionMap, Task, ContainerImage]
+          PortMappings:
+            - ContainerPort: !FindInMap [MattermostTaskDefinitionMap, Task, ContainerPort]
+              HostPort: !FindInMap [MattermostTaskDefinitionMap, Task, HostPort]
+          Memory: !FindInMap [MattermostTaskDefinitionMap, Task, ContainerMemory]
+          Environment:
+            - Name: DB_HOST
+              Value:
+                Fn::ImportValue: !Sub ${VPCName}-RDS-Endpoint
+            - Name: S3_BUCKET
+              Value: Mattermost-S3Bucket
+          Secrets:
+            - Name: MM_PASSWORD
+              ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/debugroom-technical-academy-mattermost-password"
+
+  S3AccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: Mattermost-S3AccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:*"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: Mattermost-S3Bucket-Arn
+                    - "/*"
+      Roles:
+        - !Ref MattermostECSTaskRole
+
+Outputs:
+  MattermostECSTaskDefinition:
+    Description: Mattermost ECS Task Definition
+    Value: !Ref MattermostECSTaskDefinition
+    Export:
+      Name: !Sub ${VPCName}-MattermostEcsTaskDefinition

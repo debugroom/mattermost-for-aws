@@ -1,0 +1,192 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Lambda for creating table in RDS template with YAML - Depends On vpc-cfn.yml, sg-cfn.yml, rds-cfn.yml.
+
+Parameters:
+  VPCName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: debugroom-technical-academy-vpc
+#  RDSPassword:
+#    Type: AWS::SSM::Parameter::Value<String>
+#    Default: 'debugroom-technical-academy-rds-password-custom'
+
+Resources:
+  LambdaForCreatingTableInRds:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::ImportValue: Lambda-S3Bucket
+        S3Key: lambda-dbinit-0.0.1-SNAPSHOT-aws-lambda.jar
+#        ZipFile: |
+#          import os
+#          import sys
+#          import logging
+#          import psycopg2
+#          import boto3
+#
+#          ssm = boto3.client('ssm')
+#
+#          rds_endpoint = os.environ.get("RDS_ENDPOINT", "")
+#          rds_user = os.environ.get("RDS_USER", "")
+#          rds_test = os.environ.get("RDS_PASSWORD", "")
+#          rds_password = ssm.get_parameter(
+#              Name="debugroom-technical-academy-rds-password",
+#              WithDecryption=True)
+#          rds_dbname = os.environ.get("RDS_DBNAME", "")
+#
+#          logger = logging.getLogger()
+#          logger.setLevel(logging.INFO)
+#
+#          logger.info("SUCCESS: Connection to RDS instance succeeded")
+#          try:
+#              conn = psycopg2.connect("host=" + rds_endpoint + " user=" + rds_user + " password=" + rds_password + " dbname=" + rds_dbname);
+#          except:
+#              logger.error("ERROR: Unexpected error: Could not connect to host=" + rds_endpoint + " user=" + rds_user + " password=" + rds_password + " dbname=" + rds_dbname)
+#              sys.exit()
+#
+#          def handler(event, context):
+#              cursol = conn.cursor()
+#              cursol.execute("desc;")
+#
+#              results = cursol.fetchall()
+#
+#              print(results)
+#              cursol.close()
+#              conn.close()
+#
+#      Handler: index.handler
+      Handler: org.debugroom.cloud.aws.lambda.dbinit.app.AppHandler::handleRequest
+      FunctionName: debugroom-technical-academy-rds-dbinit-function
+      Environment:
+        Variables:
+          FUNCTION_NAME: dbInitFunction
+#          RDS_ENDPOINT:
+#            Fn::ImportValue: !Sub ${VPCName}-RDS-Endpoint
+#          RDS_USER:
+#            Fn::ImportValue: !Sub ${VPCName}-RDS-UserName
+#          RDS_PASSWORD: !Ref RDSPassword
+#          RDS_DBNAME:
+#            Fn::ImportValue: !Sub ${VPCName}-RDS-DBName
+      MemorySize: 1024
+      Runtime: java8
+      Timeout: 120
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::ImportValue: !Sub ${VPCName}-SecurityGroupLambda
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VPCName}-PrivateSubnet1
+          - Fn::ImportValue: !Sub ${VPCName}-PrivateSubnet2
+      Role: !GetAtt LambdaRDSAccessRole.Arn
+
+  LambdaRDSAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  CloudFormationAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: Lambda-CloudFormationAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "cloudformation:*"
+            Resource: "*"
+      Roles:
+        - !Ref LambdaRDSAccessRole
+
+  SSMAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: lambda-SSMAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "cloudwatch:PutMetricData"
+              - "ds:CreateComputer"
+              - "ds:DescribeDirectories"
+              - "ec2:DescribeInstanceStatus"
+              - "logs:*"
+              - "ssm:*"
+              - "ec2messages:*"
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - "iam:CreateServiceLinkedRole"
+            Resource: "arn:aws:iam::*:role/aws-service-role/ssm.amazonaws.com/AWSServiceRoleForAmazonSSM*"
+            Condition:
+              StringLike:
+                iam:AWSServiceName : "ssm.amazonaws.com"
+          - Effect: Allow
+            Action:
+              - "iam:DeleteServiceLinkedRole"
+              - "iam:GetServiceLinkedRoleDeletionStatus"
+            Resource: "arn:aws:iam::*:role/aws-service-role/ssm.amazonaws.com/AWSServiceRoleForAmazonSSM*"
+          - Effect: Allow
+            Action:
+              - "ssmmessages:CreateControlChannel"
+              - "ssmmessages:CreateDataChannel"
+              - "ssmmessages:OpenControlChannel"
+              - "ssmmessages:OpenDataChannel"
+            Resource: "*"
+      Roles:
+        - !Ref LambdaRDSAccessRole
+
+#  RDSAccessPolicy:
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      PolicyName: Lambda-RDSAccessPolicy
+#      PolicyDocument:
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - "rds:*"
+#              - "application-autoscaling:DeleteScalingPolicy"
+#              - "application-autoscaling:DeregisterScalableTarget"
+#              - "application-autoscaling:DescribeScalableTargets"
+#              - "application-autoscaling:DescribeScalingActivities"
+#              - "application-autoscaling:DescribeScalingPolicies"
+#              - "application-autoscaling:PutScalingPolicy"
+#              - "application-autoscaling:RegisterScalableTarget"
+#              - "cloudwatch:DescribeAlarms"
+#              - "cloudwatch:GetMetricStatistics"
+#              - "cloudwatch:PutMetricAlarm"
+#              - "cloudwatch:DeleteAlarms"
+#              - "ec2:DescribeAccountAttributes"
+#              - "ec2:DescribeAvailabilityZones"
+#              - "ec2:DescribeInternetGateways"
+#              - "ec2:DescribeSecurityGroups"
+#              - "ec2:DescribeSubnets"
+#              - "ec2:DescribeVpcAttribute"
+#              - "ec2:DescribeVpcs"
+#              - "sns:ListSubscriptions"
+#              - "sns:ListTopics"
+#              - "sns:Publish"
+#              - "logs:DescribeLogStreams"
+#              - "logs:GetLogEvents"
+#            Resource: "*"
+#      Roles:
+#        - !Ref LambdaRDSAccessRole
+
+Outputs:
+  LambdaForCreatingTableInRdsArn:
+    Description: Lambda function for creating table in rds
+    Value: !GetAtt LambdaForCreatingTableInRds.Arn
+    Export:
+      Name: !Sub ${VPCName}-LamdaForCreatingTableInRdsArn
+
