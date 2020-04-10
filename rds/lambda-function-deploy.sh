@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-bucket_name=debugroom-cloudformation-lambda-bucket
-stack_name="debugroom-technical-academy-s3-for-lambda"
+bucket_name=ma-cloudformation-lambda-bucket
+stack_name="ma-common-s3-lambda"
 template_path="s3-for-lambda-cfn.yml"
 s3_objectkey="lambda-dbinit-0.0.1-SNAPSHOT-aws-lambda.jar"
 

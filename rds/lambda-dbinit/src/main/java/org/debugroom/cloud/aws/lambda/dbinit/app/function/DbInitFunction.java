@@ -23,7 +23,7 @@ public class DbInitFunction implements Function<Map<String, Object>, Flux<String
     @Override
     public Flux<String> apply(Map<String, Object> event) {
         GetParameterRequest request = new GetParameterRequest();
-        request.setName("debugroom-technical-academy-mattermost-password");
+        request.setName("ma-mattermost-password");
         request.setWithDecryption(true);
         jdbcTemplate.execute("CREATE ROLE mattermost WITH LOGIN PASSWORD '"
                 + awsSimpleSystemsManagement.getParameter(request).getParameter().getValue()

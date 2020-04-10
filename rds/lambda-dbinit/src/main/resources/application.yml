@@ -6,7 +6,7 @@ spring:
 cloud:
   aws:
     stack:
-      name: debugroom-technical-academy-rds
+      name: ma-common-rds
     credentials:
       instanceProfile: false
       profileName:

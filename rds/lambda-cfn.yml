@@ -9,7 +9,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
 #  RDSPassword:
 #    Type: AWS::SSM::Parameter::Value<String>
 #    Default: 'debugroom-technical-academy-rds-password-custom'
@@ -61,7 +61,7 @@ Resources:
 #
 #      Handler: index.handler
       Handler: org.debugroom.cloud.aws.lambda.dbinit.app.AppHandler::handleRequest
-      FunctionName: debugroom-technical-academy-rds-dbinit-function
+      FunctionName: ma-rds-dbinit-function
       Environment:
         Variables:
           FUNCTION_NAME: dbInitFunction
@@ -99,7 +99,7 @@ Resources:
   CloudFormationAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: Lambda-CloudFormationAccessPolicy
+      PolicyName: ma-Lambda-CloudFormationAccessPolicy
       PolicyDocument:
         Statement:
           - Effect: Allow
@@ -112,7 +112,7 @@ Resources:
   SSMAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: lambda-SSMAccessPolicy
+      PolicyName: ma-lambda-SSMAccessPolicy
       PolicyDocument:
         Statement:
           - Effect: Allow

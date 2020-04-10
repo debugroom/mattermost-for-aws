@@ -9,7 +9,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
 
 Mappings:
   MattermostTaskDefinitionMap:
@@ -73,15 +73,15 @@ Resources:
               Value:
                 Fn::ImportValue: !Sub ${VPCName}-RDS-Endpoint
             - Name: S3_BUCKET
-              Value: Mattermost-S3Bucket
+              Value: ma-mattermost-bucket
           Secrets:
             - Name: MM_PASSWORD
-              ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/debugroom-technical-academy-mattermost-password"
+              ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ma-mattermost-password"
 
   S3AccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: Mattermost-S3AccessPolicy
+      PolicyName: ma-Mattermost-S3AccessPolicy
       PolicyDocument:
         Statement:
           - Effect: Allow

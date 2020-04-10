@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: Satgateway template with YAML - NatGateway Depends on sample-vpc-cfn.yml
+Description: Satgateway template with YAML - NatGateway Depends on vpc-cfn.yml
 
 Parameters:
   VPCName:
@@ -9,7 +9,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
 
 Resources:
   NatGWEIP:

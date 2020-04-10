@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
-@EnableStackConfiguration(stackName = "debugroom-technical-academy-rds")
+@EnableStackConfiguration(stackName = "ma-common-rds")
 //Not use @EnableRdsInstance annotation because of dynamic referenec by AWS Systems Manager Parameter Store Client.
 //@EnableRdsInstance(
 //        dbInstanceIdentifier = "mynavi-sample-cloudformation-dev-postgresql",
@@ -23,9 +23,9 @@ import javax.sql.DataSource;
 @Configuration
 public class RdsConfig {
 
-    private static final String dbName = "debugroom-technical-academy-vpc-RDS-DBName";
-    private static final String rdsEndpoint = "debugroom-technical-academy-vpc-RDS-Endpoint";
-    private static final String rdsUserName = "debugroom-technical-academy-vpc-RDS-UserName";
+    private static final String dbName = "ma-common-vpc-RDS-DBName";
+    private static final String rdsEndpoint = "ma-common-vpc-RDS-Endpoint";
+    private static final String rdsUserName = "ma-common-vpc-RDS-UserName";
 
     @Bean
     CloudFormationStackResolver cloudFormationStackResolver(){
@@ -46,7 +46,7 @@ public class RdsConfig {
                 + ":5432/mattermost");
         dataSourceBuilder.username(cloudFormationStackResolver().getExportValue(rdsUserName));
         GetParameterRequest request = new GetParameterRequest();
-        request.setName("debugroom-technical-academy-rds-password");
+        request.setName("ma-rds-postgres-master-password");
         request.setWithDecryption(true);
         dataSourceBuilder.password(awsSimpleSystemsManagement().getParameter(request)
                 .getParameter().getValue());
