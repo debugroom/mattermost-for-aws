@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: S3 Bucket for mattermost template with YAML - S3 Bucket Definition
+
+Parameters:
+  NewBucketName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: debugroom-technical-academy-mattermost-gen2-bucket
+  CopyRoleName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: CopyS3DataAssumeRole
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${NewBucketName}
+      AccessControl: "Private"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+#          - Sid: "CopyS3DataForNewMattermost"
+          - Effect: "Allow"
+            Principal:
+              "AWS": !Join
+                       - ""
+                       - - "arn:aws:iam::"
+                         - "{{resolve:ssm:debugroom-technical-academy-mattermost-old-account:1}}"
+                         - ":role/"
+                         - !Sub ${CopyRoleName}
+#            Principal: {"AWS": "arn:aws:iam::626394096352:user/CopyS3Client" }
+            Action:
+              - "s3:ListBucket"
+              - "s3:PutObject"
+              - "s3:PutObjectAcl"
+              - "s3:PutObjectTagging"
+              - "s3:GetObjectTagging"
+              - "s3:GetObjectVersion"
+              - "s3:GetObjectVersionTagging"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::Sub: ${NewBucketName}
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::Sub: ${NewBucketName}
+                    - "/*"
+#            Condition:
+#              StringEquals:
+#                  "s3:x-amz-acl":
+#                     - "bucket-owner-full-control"
+
+Outputs:
+  S3Bucket:
+    Description: S3 for mattermost storage bucket name
+    Value: !Ref S3Bucket
+    Export:
+      Name: New-Mattermost-S3Bucket
+
+  S3BucketArn:
+    Description: S3 for mattermost storage bucket arn
+    Value: !GetAtt S3Bucket.Arn
+    Export:
+      Name: New-Mattermost-S3Bucket-Arn

@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+# For Migration New Account
+#stack_name="debugroom-technical-academy-S3-for-new-mattermost"
+#stack_name="debugroom-technical-academy-rds-migration"
+#stack_name="debugroom-technical-academy-iam-user-for-migration-mattermost"
+#template_path="migration/source-1-iam-user-for-copying-bucket-cfn.yml"
+#template_path="migration/destination-1-s3-for-new-mattermost-cfn.yml"
+#template_path="migration/destination-5-rds-postgres-createdby-snapshot-cfn.yml"
+#template_path="migration/destination-6-natgw-cfn.yml"
+#template_path="migration/destination-7-ecs-cluster-cfn.yml"
+#template_path="migration/destination-8-ecs-task-cfn.yml"
+#template_path="migration/destination-9-alb-cfn.yml"
+#template_path="migration/destination-10-tg-cfn.yml"
+template_path="migration/destination-12-ecs-service-cfn.yml"
+
 stack_name="debugroom-technical-academy-ecs-service-mattermost"
 #stack_name="debugroom-technical-academy-targetgroup-mattermost"
 #stack_name="debugroom-technical-academy-alb"
@@ -12,7 +26,7 @@ stack_name="debugroom-technical-academy-ecs-service-mattermost"
 #stack_name="debugroom-technical-academy-rds"
 #stack_name="debugroom-technical-academy-sg"
 #stack_name="debugroom-technical-academy-vpc"
-template_path="mattermost-server/ecs-service-cfn.yml"
+#template_path="mattermost-server/ecs-service-cfn.yml"
 #template_path="mattermost-server/tg-cfn.yml"
 #template_path="base/alb-cfn.yml"
 #template_path="mattermost-server/ecs-task-cfn.yml"
@@ -31,6 +45,10 @@ parameters=""
 
 if [ "$parameters" == "" ]; then
     aws cloudformation deploy --stack-name ${stack_name} --template-file ${template_path} --capabilities CAPABILITY_IAM
+    #if the Resources includes IAM, You should specify CAPABILITY_NAMED_IAM options in capabilities
+#    aws cloudformation deploy --stack-name ${stack_name} --template-file ${template_path} --capabilities CAPABILITY_NAMED_IAM
 else
     aws cloudformation deploy --stack-name ${stack_name} --template-file ${template_path} --parameter-overrides ${parameters} --capabilities CAPABILITY_IAM
+    #if the Resources includes IAM, You should specify CAPABILITY_NAMED_IAM options in capabilities
+#    aws cloudformation deploy --stack-name ${stack_name} --template-file ${template_path} --parameter-overrides ${parameters} --capabilities CAPABILITY_NAMED_IAM
 fi

@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: IAM User to copy S3 Bucket data for mattermost template with YAML - IAM Group / User / Policy Definition
+
+Parameters:
+  NewBucketName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: debugroom-technical-academy-mattermost-gen2-bucket
+#  CopyUserName:
+#      Description: Target VPC Stack Name
+#      Type: String
+#      MinLength: 1
+#      MaxLength: 255
+#      AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+#      Default: CopyS3Client
+
+Resources:
+#  CopyS3DataForMattermostUser:
+#    Type: AWS::IAM::User
+#    Properties:
+#      UserName: !Sub ${CopyUserName}
+#      Groups:
+#        - CopyS3DataForMatterMostGroup
+
+  CopyS3DataForMattermostRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CopyS3DataAssumeRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              "AWS": !Sub "arn:aws:iam::${AWS::AccountId}:user/ma_app_user"
+            Action:
+              - "sts:AssumeRole"
+            Condition: {}
+
+#  CopyS3DataForMattermostGroup:
+#    Type: AWS::IAM::Group
+#    Properties:
+#      GroupName: "CopyS3DataForMattermostGroup"
+#      ManagedPolicyArns:
+#        - arn:aws:iam::aws:policy/ReadOnlyAccess
+#        - !Ref CopyS3DataForMattermostPolicy
+
+  CopyS3DataForMattermostPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: "CopyS3DataForMattermostPolicy"
+      Roles:
+        - !Ref CopyS3DataForMattermostRole
+      PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action:
+              - "s3:List*"
+            Resource:
+              - Fn::ImportValue: Mattermost-S3Bucket-Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: Mattermost-S3Bucket-Arn
+                    - "/*"
+          - Effect: "Allow"
+            Action:
+              - "s3:GetObject"
+              - "s3:GetObjectTagging"
+              - "s3:GetObjectVersion"
+              - "s3:GetObjectVersionTagging"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: Mattermost-S3Bucket-Arn
+                    - "/*"
+          - Effect: "Allow"
+            Action:
+              - "s3:List*"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::Sub: ${NewBucketName}
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::Sub: ${NewBucketName}
+                    - "/*"
+          - Effect: "Allow"
+            Action:
+              - "s3:PutObject"
+              - "s3:PutObjectAcl"
+              - "s3:PutObjectTagging"
+              - "s3:GetObjectTagging"
+              - "s3:GetObjectVersion"
+              - "s3:GetObjectVersionTagging"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::Sub: ${NewBucketName}
+                    - "/*"

@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: IAM User to copy S3 Bucket data for mattermost template with YAML - IAM Group / User / Policy Definition
+
+Parameters:
+  CopyRoleName:
+    Description: Target VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: ShareKMSKeyAssumeRole
+
+Resources:
+  ShareKMSKeyForMattermostRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CopySDBSnapshotAssumeRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+#          - Sid: "CopyDBSnapshotForNewMattermost"
+          - Effect: "Allow"
+            Principal:
+              "AWS": !Join
+                - ""
+                - - "arn:aws:iam::"
+                  - "{{resolve:ssm:debugroom-technical-academy-mattermost-new-account:1}}"
+                  - ":role/"
+                  - !Sub ${CopyRoleName}
+
+  ShareKMSKeyForMattermostPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: "ShareKMSKeyForMattermostPolicy"
+      Roles:
+        - !Ref ShareKMSKeyForMattermostRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey*"
+            Resource: "*"
