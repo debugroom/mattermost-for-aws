@@ -9,20 +9,20 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
   VPCCiderBlock:
     Description: CiderBlock paramater for VPC
     Type: String
     MinLength: 9
     MaxLength: 18
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-    Default: 172.2.0.0/16
+    Default: 10.1.0.0/16
 
 Resources:
   SecurityGroupPublicALB:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: SecurityGroupPUblicALB
+      GroupName: ma-kawabataku-SecurityGroupPublicALB
       GroupDescription: http access
       VpcId:
         Fn::ImportValue: !Sub ${VPCName}-VPCID
@@ -30,7 +30,7 @@ Resources:
         - Key : Name
           Value: !Sub ${VPCName}-SecurityGroupPublicALB
 
-  SecurityGroupInggressPublicALB:
+  SecurityGroupInggressPublicALBHTTP:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroupPublicALB
@@ -39,10 +39,19 @@ Resources:
       ToPort: 80
       CidrIp: 0.0.0.0/0
 
+  SecurityGroupInggressPublicALBHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecurityGroupPublicALB
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+
   SecurityGroupPublicEcsCluster:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: SecurityGroupPublicEcsCluster
+      GroupName: ma-kawabataku-SecurityGroupPublicEcsCluster
       GroupDescription: http access only alb
       VpcId:
         Fn::ImportValue: !Sub ${VPCName}-VPCID
@@ -62,7 +71,7 @@ Resources:
   SecurityGroupRdsPostgres:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: SecurityGroupRdsPostgres
+      GroupName: ma-kawabataku-SecurityGroupRdsPostgres
       GroupDescription: db access for public ecs cluster subnet
       VpcId:
         Fn::ImportValue: !Sub ${VPCName}-VPCID
@@ -82,7 +91,7 @@ Resources:
   SecurityGroupLambda:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: SecurityGroupLambda
+      GroupName: ma-kawabataku-SecurityGroupLambda
       GroupDescription: lambda access rds
       VpcId:
         Fn::ImportValue: !Sub ${VPCName}-VPCID

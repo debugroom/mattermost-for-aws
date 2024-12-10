@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 
-# For Migration New Account
-#stack_name="debugroom-technical-academy-S3-for-new-mattermost"
-
-#stack_name="debugroom-technical-academy-iam-user-for-migration-mattermost"
-stack_name="debugroom-technical-academy-ecs-service-mattermost"
-#stack_name="debugroom-technical-academy-ecs-task-mattermost"
-#stack_name="debugroom-technical-academy-targetgroup-mattermost"
-#stack_name="debugroom-technical-academy-alb"
-#stack_name="debugroom-technical-academy-custom"
-#stack_name="debugroom-technical-academy-ecs-cluster"
-#stack_name="debugroom-technical-academy-lambda"
-#stack_name="debugroom-technical-academy-natgw"
-#stack_name="debugroom-technical-academy-rds-migration"
-#stack_name="debugroom-technical-academy-rds"
-#stack_name="debugroom-technical-academy-sg"
-#stack_name="debugroom-technical-academy-vpc"
+stack_name="ma-common-ecs-service-mattermost"
+#stack_name="ma-common-targetgroup-mattermost"
+#stack_name="ma-common-public-alb"
+#stack_name="ma-common-ecs-task-mattermost"
+#stack_name="ma-common-public-ecs-cluster"
+#stack_name="ma-common-customresource-dbinit"
+#stack_name="ma-common-lambda-dbinit"
+#stack_name="ma-common-s3-lambda"
+#stack_name="ma-common-natgw"
+#stack_name="ma-common-rds"
+#stack_name="ma-common-sg"
+#stack_name="ma-common-vpc"
 
 aws cloudformation delete-stack --stack-name ${stack_name}

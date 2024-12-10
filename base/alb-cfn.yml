@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: Sample CloudFormation template with YAML - ALB.  Depends On sample-vpc-cfn.yml, sample-sg-cfn.yml.
+Description: ALB CloudFormation template with YAML.  Depends On sample-vpc-cfn.yml, sample-sg-cfn.yml and prepare certification using certification manager.
 
 Mappings:
   DeployEnvironmentMap:
@@ -18,26 +18,34 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
   EnvType:
     Description: Which environments to deploy your service.
     Type: String
     AllowedValues: ["Dev", "Production"]
     Default: Dev
-
-  FrontendHealthCheckPath:
-    Description: Frontend WebApp health check path
+  HealthCheckPath:
+    Description: health check path
     Type: String
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[-¥.¥/a-zA-Z0-9]*$
-    Default: /frontend/portal
+    Default: /
+  Certificate:
+    Description: SSL Certificate
+    Type: String
+    MinLength: 1
+    MaxLength: 128
+    AllowedPattern: ^[-_ .:/a-zA-Z0-9]*
+    Default: arn:aws:acm::xxxxxxxxxxxx:server-certificate/cert.example.jp
+Conditions:
+  ProductionResources: {"Fn::Equals" : [{"Ref":"EnvType"}, "Production"]}
 
 Resources:
   PublicALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: PublicALB
+      Name: ma-PublicALB
       Subnets:
         - Fn::ImportValue: !Sub ${VPCName}-PublicSubnet1
         - Fn::ImportValue: !Sub ${VPCName}-PublicSubnet2
@@ -47,12 +55,12 @@ Resources:
   PublicALBDefaultTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: PublicALBTargetGroup
+      Name: ma-PublicALB-TargetGroup
       VpcId:
         Fn::ImportValue: !Sub ${VPCName}-VPCID
-      Port: !FindInMap [DeployEnvironmentMap, !Ref EnvType, Port]
-      Protocol: !FindInMap [DeployEnvironmentMap, !Ref EnvType, Protocol]
-      HealthCheckPath: !Ref FrontendHealthCheckPath
+      Port: 80
+      Protocol: HTTP
+      HealthCheckPath: !Ref HealthCheckPath
       HealthCheckIntervalSeconds: 60
       HealthyThresholdCount: 2
       TargetGroupAttributes:
@@ -65,6 +73,8 @@ Resources:
       LoadBalancerArn: !Ref PublicALB
       Port: !FindInMap [DeployEnvironmentMap, !Ref EnvType, Port]
       Protocol: !FindInMap [DeployEnvironmentMap, !Ref EnvType, Protocol]
+      Certificates:
+        - CertificateArn: !If ["ProductionResources", !Ref Certificate, !Ref "AWS::NoValue"]
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref PublicALBDefaultTargetGroup

@@ -9,7 +9,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: debugroom-technical-academy-vpc
+    Default: ma-common-vpc
   ECSAMI:
     Description: AMI ID
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -18,7 +18,7 @@ Parameters:
 Mappings:
   PublicClusterDefinitionMap:
     Instance:
-      "InstanceType" : "r4.large"
+      "InstanceType" : "m5.large"
       "DesiredCapacity" : 1
       "EC2InstanceMaxSizeOfECS": 2
       "KeyPairName" : "test"
@@ -48,7 +48,7 @@ Resources:
   PublicECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: public-ecs-cluster
+      ClusterName: ma-public-ecs-cluster
       Tags:
         - Key: Name
           Value: PublicECSCluster
@@ -65,7 +65,7 @@ Resources:
       DesiredCapacity: !FindInMap [PublicClusterDefinitionMap, Instance, DesiredCapacity]
       Tags:
         - Key: Name
-          Value: PublicECSCluster
+          Value: ma-common-PublicECSCluster
           PropagateAtLaunch: true
     CreationPolicy:
       ResourceSignal:
@@ -80,7 +80,7 @@ Resources:
       ImageId: !Ref ECSAMI
       InstanceType: !FindInMap [PublicClusterDefinitionMap, Instance, InstanceType]
       IamInstanceProfile: !Ref IamInstanceProfile
-      KeyName: !FindInMap [PublicClusterDefinitionMap, Instance, KeyPairName]
+#      KeyName: !FindInMap [PublicClusterDefinitionMap, Instance, KeyPairName]
       SecurityGroups:
         - Fn::ImportValue: !Sub ${VPCName}-SecurityGroupPublicEcsCluster
       AssociatePublicIpAddress: true

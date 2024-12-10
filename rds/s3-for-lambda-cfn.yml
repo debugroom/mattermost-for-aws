@@ -6,7 +6,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: debugroom-cloudformation-lambda-bucket
+      BucketName: ma-cloudformation-lambda-bucket
       AccessControl: "Private"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
